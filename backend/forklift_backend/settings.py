@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-rr#aevqs3w_+cv1)oy_x5wx*l+c$4spsft6x52cx1qm+y$nmy+"
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-rr#aevqs3w_+cv1)oy_x5wx*l+c$4spsft6x52cx1qm+y$nmy")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "1") == "1"
 
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
 
 # Application definition
@@ -79,15 +81,18 @@ WSGI_APPLICATION = "forklit_backend.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "HOST": os.getenv("DB_HOST", "db"),
+        "PORT": os.getenv("DB_PORT", "5432"),
+        "NAME": os.getenv("DB_NAME", "forklit"),
+        "USER": os.getenv("DB_USER", "forklit"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "forklit"),
     }
 }
 
 LANGUAGE_CODE = "sk"
 TIME_ZONE = "Europe/Bratislava"
-CORS_ALLOW_ALL_ORIGINS = True
-
+CORS_ALLOW_ALL_ORIGINS = os.getenv("CORS_ALLOW_ALL_ORIGINS", "1") == "1"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -130,4 +135,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SPECTACULAR_SETTINGS = {
     "TITLE": "Forklit Battery Checker API",
     "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,  # neschovávaj schému v /api/schema/ odpovedi
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
 }

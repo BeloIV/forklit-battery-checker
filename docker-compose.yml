@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-forklit}
+      POSTGRES_USER: ${POSTGRES_USER:-forklit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-forklit}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-forklit} -d ${POSTGRES_DB:-forklit}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    command: ./entrypoint.sh
+    env_file: backend/.env
+    environment:
+      # fallbacky (ak .env nebude)
+      DEBUG: ${DEBUG:-1}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-forklit}
+      DB_USER: ${POSTGRES_USER:-forklit}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-forklit}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+      CORS_ALLOW_ALL_ORIGINS: ${CORS_ALLOW_ALL_ORIGINS:-1}
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+volumes:
+  db_data:
